@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, ClassVar
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 def utc_now_iso() -> str:
@@ -53,10 +53,55 @@ class JobPosting(BaseModel):
     raw: dict[str, Any] = Field(default_factory=dict)
 
 
+class ScanPreset(BaseModel):
+    remote_only: bool = False
+    skill_filters: list[str] = Field(default_factory=list)
+    min_score: float = 0.0
+    min_salary: int = 0
+    max_results: int = 20
+
+
 class ApplicationPackage(BaseModel):
     job_id: str
+    status: str = "draft"
     created_at: str = Field(default_factory=utc_now_iso)
+    updated_at: str = Field(default_factory=utc_now_iso)
     cover_note: str = ""
     checklist: list[str] = Field(default_factory=list)
     cv_markdown_path: str = ""
     notes: str = ""
+
+    VALID_STATUSES: ClassVar[set[str]] = {"draft", "applied", "interview", "offer", "rejected", "accepted"}
+
+    @field_validator("status")
+    @classmethod
+    def _validate_status(cls, v: str) -> str:
+        if v not in cls.VALID_STATUSES:
+            raise ValueError(f"Invalid status '{v}'. Must be one of {sorted(cls.VALID_STATUSES)}")
+        return v
+
+    def set_status(self, new_status: str) -> None:
+        if new_status not in self.VALID_STATUSES:
+            raise ValueError(f"Invalid status '{new_status}'. Must be one of {sorted(self.VALID_STATUSES)}")
+        self.status = new_status
+        self.updated_at = utc_now_iso()
+
+
+def parse_salary_value(salary: str) -> int | None:
+    """Extract a numeric annual salary floor from a salary string. Returns None if unparseable."""
+    import re
+    if not salary or not salary.strip():
+        return None
+    s = salary.lower().replace(",", "").replace("€", "").replace("$", "").replace("£", "").strip()
+    # Try ranges like "80k-120k" or "80k – 120k"
+    m = re.search(r"(\d+)\s*k", s)
+    if m:
+        return int(m.group(1)) * 1000
+    # Try "80000-120000"
+    m = re.search(r"(\d{4,6})", s)
+    if m:
+        val = int(m.group(1))
+        # If first number looks like annual salary
+        if 10000 <= val <= 999999:
+            return val
+    return None

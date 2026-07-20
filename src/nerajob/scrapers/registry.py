@@ -2,10 +2,14 @@ from __future__ import annotations
 
 import os
 
+from nerajob.scrapers.adzuna import AdzunaScraper
 from nerajob.scrapers.arbeitnow import ArbeitnowScraper
 from nerajob.scrapers.ashby import AshbyScraper
 from nerajob.scrapers.base import BaseScraper
+from nerajob.scrapers.findwork import FindworkScraper
+from nerajob.scrapers.himalayas import HimalayasScraper
 from nerajob.scrapers.jobicy import JobicyScraper
+from nerajob.scrapers.jooble import JoobleScraper
 from nerajob.scrapers.lever import LeverScraper
 from nerajob.scrapers.remoteok import RemoteOKScraper
 from nerajob.scrapers.remotive import RemotiveScraper
@@ -28,7 +32,14 @@ def available_scrapers() -> dict[str, BaseScraper]:
     Arbeitnow: live public API; set NERAJOB_ARBEITNOW_OFFLINE=1 for offline samples.
     Jobicy: live public API; set NERAJOB_JOBICY_OFFLINE=1 for offline samples.
     We Work Remotely: RSS feed; set NERAJOB_WWR_OFFLINE=1 for offline samples.
-    SmartRecruiters: set NERAJOB_SMARTRECRUITERS_COMPANIES to comma-separated company IDs.
+    Smart Recruiters: set NERAJOB_SMARTRECRUITERS_COMPANIES to comma-separated company IDs.
+    Findwork: live public API; set NERAJOB_FINDWORK_API_TOKEN env var to use live mode.
+              Without token, returns deterministic offline fixtures.
+              Set NERAJOB_FINDWORK_OFFLINE=1 to force offline even with token.
+    Adzuna: live public API; set ADZUNA_APP_ID + ADZUNA_APP_KEY env vars.
+            Without credentials, returns deterministic offline fixtures.
+            Set NERAJOB_ADZUNA_OFFLINE=1 to force offline even with credentials.
+    Himalayas: live public API; set NERAJOB_HIMALAYAS_OFFLINE=1 to force offline samples.
     """
     scrapers: list[BaseScraper] = [
         SampleScraper(),
@@ -36,11 +47,15 @@ def available_scrapers() -> dict[str, BaseScraper]:
         RemotiveScraper(),
         ArbeitnowScraper(),
         JobicyScraper(),
+        JoobleScraper(),
         TheMuseScraper(),
         WeWorkRemotelyScraper(),
         LeverScraper(board_name=os.getenv("NERAJOB_LEVER_BOARD") or None),
         AshbyScraper(board_id=os.getenv("NERAJOB_ASHBY_BOARD") or None),
         SmartRecruitersScraper(),
+        FindworkScraper(),
+        HimalayasScraper(),
+        AdzunaScraper(),
     ]
     return {s.name: s for s in scrapers}
 

@@ -48,3 +48,98 @@ def test_expand_skills_mobile():
     ios = expand_skills({"ios"})
     assert "mobile" in ios
     assert "swift" in ios
+
+
+def test_expand_skills_education_and_edtech():
+    lms = expand_skills({"lms"})
+    assert "education" in lms
+    assert "curriculum" in lms
+    assert "assessment" in lms
+
+    tutoring = expand_skills({"tutoring"})
+    assert "edtech" in tutoring
+    assert "learning management system" in tutoring
+    assert "instructional design" in tutoring
+
+
+def test_expand_skills_cloud_wave2():
+    """Wave2: cloud aliases expanded with Azure/GCP services, IaC, serverless."""
+    cloud = expand_skills({"cloud"})
+    assert "aws" in cloud
+    assert "gcp" in cloud
+    assert "azure" in cloud
+    assert "lambda" in cloud
+    assert "cloudformation" in cloud
+    assert "serverless" in cloud
+    assert "pulumi" in cloud
+    assert "gke" in cloud or "eks" in cloud
+    assert "cdn" in cloud
+    # new cloud aliases added for bounty #57
+    for s in ["ec2", "ecs", "cloudformation", "cloudrun", "cloudfunctions",
+              "pulumi", "cdk", "route53", "cloudfront", "iam", "vpc",
+              "eks", "gke", "aks", "cloudwatch", "cloudtrail"]:
+        out = expand_skills({s})
+        assert "cloud" in out, f"expected 'cloud' in expansion of {s}"
+    # terraform bridges cloud + devops
+    assert "terraform" in expand_skills({"cloud"})
+    assert "terraform" in expand_skills({"devops"})
+
+
+def test_expand_skills_devops_wave2():
+    """Wave2: devops aliases expanded with terraform, helm, sre, cicd tools."""
+    devops = expand_skills({"devops"})
+    assert "kubernetes" in devops
+    assert "docker" in devops
+    assert "terraform" in devops
+    assert "helm" in devops
+    assert "ansible" in devops
+    assert "sre" in devops
+    assert "prometheus" in devops
+    assert "grafana" in devops
+    assert "infrastructure as code" in devops or "iac" in devops
+    # new devops aliases added for bounty #57
+    for s in ["helm", "ansible", "sre", "site reliability", "prometheus",
+              "grafana", "istio", "argocd", "jenkins", "github actions",
+              "gitlab ci", "vault", "consul", "nomad"]:
+        out = expand_skills({s})
+        assert "devops" in out, f"expected 'devops' in expansion of {s}"
+
+
+def test_expand_skills_mobile_wave2():
+    """Wave2: mobile aliases expanded with cross-platform and native tooling."""
+    mob = expand_skills({"mobile"})
+    assert "flutter" in mob
+    assert "react native" in mob
+    assert "xamarin" in mob
+    assert "maui" in mob
+    assert "jetpack compose" in mob
+    assert "xcode" in mob
+    assert "android studio" in mob
+    assert "pwa" in mob or "progressive web app" in mob
+    # new mobile aliases added for bounty #58
+    for s in ["objc", "objective-c", "swiftui", "jetpack compose",
+              "xamarin", "ionic", "cordova", "mobile dev", "app store",
+              "play store", "expo"]:
+        out = expand_skills({s})
+        assert "mobile" in out, f"expected 'mobile' in expansion of {s}"
+
+
+def test_expand_skills_finance_wave2():
+    """Wave2: finance aliases expanded with payments, kyc, aml, quant, trading."""
+    fin = expand_skills({"finance"})
+    assert "fintech" in fin
+    assert "payments" in fin
+    assert "kyc" in fin
+    assert "aml" in fin
+    assert "quant" in fin
+    assert "trading" in fin
+    assert "plaid" in fin
+    assert "payment gateway" in fin
+    assert "wealth management" in fin
+    # new finance/fintech aliases added for bounty #59
+    for s in ["payments", "ledger", "kyc", "aml", "risk", "quant",
+              "quantitative", "trading", "settlement", "clearing",
+              "underwriting", "treasury", "stripe", "plaid", "swift",
+              "iso20022", "bloomberg", "reconciliation"]:
+        out = expand_skills({s})
+        assert "finance" in out, f"expected 'finance' in expansion of {s}"

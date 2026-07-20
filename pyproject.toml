@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nerajob"
-version = "0.2.33"
+version = "0.2.66"
 description = "Global job scanner, CV builder, and apply assistant"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -24,10 +24,15 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "pytest>=8.0",
+  "pytest-asyncio>=0.24",
   "ruff>=0.4",
 ]
 gui = [
   "PySide6>=6.6",
+]
+pdf = [
+  "weasyprint>=62",
+  "fpdf2>=2.7",
 ]
 
 [project.scripts]
@@ -40,6 +45,8 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.ruff]
 line-length = 100

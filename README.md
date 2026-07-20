@@ -24,6 +24,7 @@
 - [Repository layout](#repository-layout)
 - [Data layout](#data-layout)
 - [Adding a job site](#adding-a-job-site)
+- [Skill aliases](#skill-aliases)
 - [Compliance](#compliance)
 - [Development](#development)
 - [MergeOS bounties](#mergeos-bounties)
@@ -216,6 +217,7 @@ nerajob-gui
 | `nerajob scan --source …` | Scan one scraper |
 | `nerajob scan --all` | All registered scrapers |
 | `nerajob jobs list` | List cached jobs |
+| `nerajob jobs match` | Rank cached jobs with configurable match weights |
 | `nerajob cv build --target "…"` | Build Markdown + text CV |
 | `nerajob apply prepare --job-id <id>` | Apply package for one job |
 | `nerajob gui` / `nerajob-gui` | **Qt desktop app** (needs `.[gui]`) |
@@ -226,7 +228,12 @@ nerajob scan --source remoteok -q python -n 20
 nerajob cv build --target "Backend Engineer"
 nerajob apply prepare --job-id <id>
 nerajob jobs list
+nerajob jobs match --skill-weight 70 --title-weight 20 --location-weight 12
 ```
+
+Match scoring defaults to a 70-point skills cap, 20-point title/headline cap, and
+12-point location/remote cap. Adjust those weights when a search should favor
+role wording or location fit over direct skill hits.
 
 ---
 
@@ -273,6 +280,7 @@ src/nerajob/
   cv/builder.py
   apply/assistant.py
 docs/SOURCES.md
+docs/SKILL_ALIASES.md
 docs/screenshots/
 docs/diagrams/
 ```
@@ -302,17 +310,77 @@ data/
 
 See [docs/BOUNTY.md](docs/BOUNTY.md) for MergeOS scraper bounty acceptance.
 
+## Adding a skill domain
+
+Skill aliases live in `src/nerajob/match.py` as `SKILL_ALIASES` — a `dict[str, set[str]]`. Each key is a canonical skill domain, and its set contains matching keywords used for resume ↔ job matching via `expand_skills()`.
+
+### Pattern
+
+Add a new domain entry in `SKILL_ALIASES`:
+
+```python
+"new_domain": {"new_domain", "alias1", "alias2", "alias3"},
+```
+
+Then add a test in `tests/test_skill_aliases.py`:
+
+```python
+def test_expand_skills_new_domain():
+    out = expand_skills({"new_domain"})
+    assert "alias1" in out
+    assert "alias2" in out
+```
+
+Verify with the CLI:
+
+```bash
+nerajob skills | grep new_domain
+pytest tests/test_skill_aliases.py -q
+```
+
+### Existing domains (for reference)
+
+Run `nerajob skills` to list all domains and their aliases.
+
+| Domain key | Covers |
+| --- | --- |
+| `python` | django, fastapi, flask |
+| `javascript` | js, typescript, node, react |
+| `devops` | docker, kubernetes, k8s, ci/cd |
+| `ml_ai` | machine learning, deep learning, nlp, pytorch, tensorflow |
+| `data_engineering` | etl, spark, airflow, dbt, warehouse |
+| `cybersecurity` | soc, siem, iam, infosec |
+| `education` | teaching, curriculum, edtech, tutor |
+| *(full list via `nerajob skills`)* | |
+
+Add new domains that don't overlap with existing keys. Each domain set should be self-contained — aliases only expand inward, not across domains.
+
+---
+
+## Skill aliases
+
+NeraJob expands profile skills with `SKILL_ALIASES` in `src/nerajob/match.py`
+before scoring jobs. When adding a new skill domain, keep the alias set focused
+and add tests that exercise `expand_skills()`.
+
+Contributor guide: **[docs/SKILL_ALIASES.md](docs/SKILL_ALIASES.md)**.
+
 ---
 
 ## Compliance
 
-NeraJob is built for **ethical, ToS-aware** job discovery:
+See [SCRAPING_POLICY.md](docs/SCRAPING_POLICY.md) for ethical scraping guidelines and rate limit policies.
 
+## MergeOS bounties
+
+See [docs/BOUNTY.md](docs/BOUNTY.md) for bounty details.
 - Prefer **official / public APIs** over brittle HTML scrapers
 - Respect **robots.txt**, published rate limits, and site **Terms of Service**
 - **Never** commit secrets, long-lived tokens, or production `.env` values
 - Degrade gracefully on network failure (`[]` + optional sample fallback)
 - CI uses mocks — live smoke is optional and manual
+
+**Full policy:** [docs/ETHICAL_SCRAPING.md](docs/ETHICAL_SCRAPING.md) — covers principles, preferred official APIs, source-specific ToS notes, rate limit configuration, exponential backoff strategy, User-Agent standard, and a compliance checklist for new scrapers.
 
 Details: [docs/SOURCES.md § Compliance](docs/SOURCES.md#compliance).
 
